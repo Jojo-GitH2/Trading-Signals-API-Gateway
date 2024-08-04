@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API Endpoints</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <h1>Welcome to Trading Signals API</h1>
+    <p>
+      This API provides several endpoints that you can use to interact with our
+      service. Data is generated from NVIDIA stock prices. Here's a quick overview of what each endpoint does and how to use
+      it:
+    </p>
+    <table>
+      <tr>
+        <th>Endpoint</th>
+        <th>Description</th>
+        <th>Method</th>
+        <th>Inputs</th>
+        <th>Outputs</th>
+      </tr>
+      <tr>
+        <td>/warmup</td>
+        <td>
+          This endpoint warms up the specified service to the scale specified.
+          It does not wait for the warmup to complete, so you should check the
+          next endpoint for confirmation.
+        </td>
+        <td>POST</td>
+        <td>Example: {s: lambda, r: 3}</td>
+        <td>Format: {result: ok}</td>
+      </tr>
+
+      <!-- <p>
+      Please note that the inputs and outputs are in JSON format. Make sure to
+      replace the example values with your actual data.
+    </p> -->
+
+      <tr>
+        <td>/scaled_ready</td>
+        <td>
+          Retrieves confirmation that the specified scale is ready for analysis.
+          Expects /warmup already called. Can be called many times, with waits
+          between, until scale reached.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format: Either {warm: false} or {warm: true}</td>
+      </tr>
+      <tr>
+        <td>/get_warmup_cost</td>
+        <td>
+          Retrieves the total billable time of warmup to the requested scale and
+          the cost related to this.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Example: {billable_time: 227.44, cost: 18.33}</td>
+      </tr>
+      <tr>
+        <td>/get_endpoints</td>
+        <td>
+          Retrieves call strings relevant to directly calling each unique
+          endpoint made available at warmup. The returned call string(s) would
+          be run as a command line.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format: {endpoint: http…}, {endpoint, http…..}, …</td>
+      </tr>
+      <tr>
+        <td>/analyse</td>
+        <td>
+          Runs the analysis such that results from it can be obtained by
+          multiple subsequent calls to the next 6 endpoints in this table.
+        </td>
+        <td>POST</td>
+        <td>Format (example): {h: 101, d: 10000, t: sell, p: 7}</td>
+        <td>Format: {result: ok}</td>
+      </tr>
+      <tr>
+        <td>/get_sig_vars9599</td>
+        <td>
+          Retrieves pairs of 95% and 99% VaR values for each signal (averaged
+          over any parallel computations).
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>
+          Format (example): {var95: [0.3345, 0.412, 0.07,…], var99: [0.3345,
+          0.412, 0.07,…]}
+        </td>
+      </tr>
+      <tr>
+        <td>/get_avg_vars9599</td>
+        <td>
+          Retrieves the average risk values over all signals at each of 95% and
+          99%.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format (example): {var95: 0.3345 , var99: 0.3345}</td>
+      </tr>
+      <tr>
+        <td>/get_sig_profit_loss</td>
+        <td>Retrieves profit/loss values for all signals.</td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format (example): {profit_loss: [27.2, -51, 8, 3, -12, ...]}</td>
+      </tr>
+      <tr>
+        <td>/get_tot_profit_loss</td>
+        <td>Retrieves total resulting profit/loss.</td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format (example): {profit_loss: -99.99}</td>
+      </tr>
+      <tr>
+        <td>/get_chart_url</td>
+        <td>Retrieves the URL for a chart generated using the VaR values.</td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format (example): {url: http…..}</td>
+      </tr>
+      <tr>
+        <td>/get_time_cost</td>
+        <td>
+          Retrieves total billable time for the analysis and the cost related to
+          this.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format (example): {time: 123.45, cost: 88.32}</td>
+      </tr>
+      <tr>
+        <td>/get_audit</td>
+        <td>Retrieves information about all previous runs.</td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>
+          Format (example): {s: , r: , h: 101, d: 10000, t: sell, p: 7,
+          profit_loss: , av95: , av99: , time: , cost: }, …
+        </td>
+      </tr>
+      <tr>
+        <td>/reset</td>
+        <td>
+          Cleans up, as necessary, ready for another analysis, but retaining the
+          warmed-up scale first requested. Note that e.g. get_sig_vars9599 and
+          similar calls should not now be able to return results – JSON arrays
+          would be empty.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format: {result: ok}</td>
+      </tr>
+      <tr>
+        <td>/terminate</td>
+        <td>
+          Terminates as necessary in order to scale-to-zero, as would require
+          starting again from /warmup. Termination calls should not wait, so
+          endpoint should return immediately - next endpoint will be used for
+          checking.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format: {result: ok}</td>
+      </tr>
+      <tr>
+        <td>/scaled_terminated</td>
+        <td>
+          Retrieves confirmation of scale-to-zero. Expects that /warmup already
+          called. Could be called many times, with waits between, until all are
+          terminated.
+        </td>
+        <td>GET</td>
+        <td>NONE</td>
+        <td>Format: Either {terminated: false} or {terminated: true}</td>
+      </tr>
+    </table>
+
+    <h2>How to Use curl with Our API</h2>
+    <p>
+      You can use the `curl` command-line tool to send HTTP requests to our API.
+      Here are some examples:
+    </p>
+    <h3>GET request</h3>
+    <pre><code>
+    curl http://example.com/api/endpoint
+    </code></pre>
+    <h3>POST request with JSON data</h3>
+    <pre><code>
+    curl -d "{\"service\":\"ec2\", \"scale\":\"2\"}" -H "Content-Type: application/json" -X POST http://example.com/api/endpoint
+    </code></pre>
+    <p>
+      Please replace `http://example.com/api/endpoint` with the actual URL of
+      the API endpoint you want to interact with, and replace the example data
+      with your actual data and ensure to use `CMD` not `Powershell` on Windows.
+    </p>
+  </body>
+</html>
